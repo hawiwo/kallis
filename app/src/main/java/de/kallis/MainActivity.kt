@@ -29,15 +29,8 @@ class MainActivity : ComponentActivity() {
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
 
-        val syncRequest =
-            PeriodicWorkRequestBuilder<SalesSyncWorker>(Duration.ofMinutes(15))
-                .setConstraints(constraints)
-                .build()
-
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            "sales_sync",
-            ExistingPeriodicWorkPolicy.KEEP,
-            syncRequest
+        val syncRequest = PeriodicWorkRequestBuilder<SalesSyncWorker>(
+            15, java.util.concurrent.TimeUnit.MINUTES
         )
             .setConstraints(
                 Constraints.Builder()
@@ -45,7 +38,6 @@ class MainActivity : ComponentActivity() {
                     .build()
             )
             .build()
-
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
             "sales_sync",
             ExistingPeriodicWorkPolicy.KEEP,

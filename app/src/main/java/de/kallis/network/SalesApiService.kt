@@ -1,14 +1,11 @@
 package de.kallis.network
 
-import retrofit2.http.*
-import retrofit2.Call
 import de.kallis.model.SaleRecordEntity
+import retrofit2.Response
+import retrofit2.http.Body
+import retrofit2.http.POST
 
 interface SalesApiService {
-    @GET("sales")
-    fun getSales(): Call<List<SaleRecordEntity>>
-
-    @POST("sales")
-    fun addSale(@Body sale: SaleRecordEntity): Call<SaleRecordEntity>
+    @POST("sales/")
+    suspend fun addSale(@Body sale: SaleRecordEntity): Response<Unit>
 }
-
