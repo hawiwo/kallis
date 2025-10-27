@@ -23,8 +23,9 @@ import androidx.compose.runtime.setValue
 import androidx.work.*
 import java.time.Duration
 class MainActivity : ComponentActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
@@ -32,34 +33,27 @@ class MainActivity : ComponentActivity() {
         val syncRequest = PeriodicWorkRequestBuilder<SalesSyncWorker>(
             15, java.util.concurrent.TimeUnit.MINUTES
         )
-            .setConstraints(
-                Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                    .build()
-            )
+            .setConstraints(constraints)
             .build()
+
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
             "sales_sync",
             ExistingPeriodicWorkPolicy.KEEP,
             syncRequest
         )
 
-        super.onCreate(savedInstanceState)
-
-        // 1️⃣ Datenbank und Repository initialisieren
         val db = SalesDatabase.getDatabase(applicationContext)
         val repo = SalesRepository(db.salesDao())
 
-        // 2️⃣ beim Start: ausstehende Verkäufe synchronisieren
         CoroutineScope(Dispatchers.IO).launch {
             repo.syncPendingSales()
         }
 
-        // 3️⃣ Compose-UI starten
         setContent {
-            val articles = remember { mutableStateOf(SettingsRepository.loadArticles(this@MainActivity)) }
+            val articles = remember {
+                mutableStateOf(SettingsRepository.loadArticles(applicationContext))
+            }
 
-            // ViewModel mit Repository
             val salesViewModel: SalesViewModel = viewModel(
                 factory = object : ViewModelProvider.Factory {
                     override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -72,9 +66,12 @@ class MainActivity : ComponentActivity() {
             MaterialTheme {
                 MainScreen(
                     articles = articles.value,
-                    onReload = { articles.value = SettingsRepository.loadArticles(this@MainActivity) }
+                    onReload = {
+                        articles.value = SettingsRepository.loadArticles(applicationContext)
+                    }
                 )
             }
         }
     }
 }
+
