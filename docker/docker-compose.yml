@@ -1,0 +1,25 @@
+version: "3.9"
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: kallis
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: kallisdb
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  api:
+    image: tiangolo/uvicorn-gunicorn-fastapi:python3.11
+    volumes:
+      - ./backend:/app
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://kallis:secret@db:5432/kallisdb
+    ports:
+      - "8000:80"
+    depends_on:
+      - db
+    command: /bin/sh -c "pip install -r /app/requirements.txt && exec /start-reload.sh"
+

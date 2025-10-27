@@ -1,0 +1,6 @@
+[
+  { "artikel": "Apfel", "menge": 1, "preis": 0.8, "bestand": 120 },
+  { "artikel": "Banane", "menge": 1, "preis": 1.2, "bestand": 80 },
+  { "artikel": "Kaffee", "menge": 1, "preis": 3.5, "bestand": 40 }
+]
+
