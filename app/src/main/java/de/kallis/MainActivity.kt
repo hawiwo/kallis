@@ -4,10 +4,7 @@ import de.kallis.work.SalesSyncWorker
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.material3.MaterialTheme
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import de.kallis.model.SalesDatabase
 import de.kallis.model.SalesRepository
 import de.kallis.model.SettingsRepository
@@ -21,9 +18,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.work.*
-import java.time.Duration
-import android.app.Application
-
+import de.kallis.viewmodel.SalesViewModelFactory
+import androidx.compose.runtime.*
+import kotlinx.coroutines.*
+import de.kallis.model.Article
+import de.kallis.ui.theme.KallisTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,29 +46,33 @@ class MainActivity : ComponentActivity() {
 
         val db = SalesDatabase.getDatabase(applicationContext)
         val repo = SalesRepository(db.salesDao())
-
         setContent {
-            val articles = remember {
-                mutableStateOf(SettingsRepository.loadArticles(applicationContext))
+            var articles by remember { mutableStateOf(emptyList<Article>()) }
+
+            LaunchedEffect(Unit) {
+                articles = withContext(Dispatchers.IO) {
+                    SettingsRepository.loadArticles(applicationContext)
+                }
             }
 
             val salesViewModel: SalesViewModel = viewModel(
-                factory = object : ViewModelProvider.Factory {
-                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                        @Suppress("UNCHECKED_CAST")
-                        return SalesViewModel(repo) as T
-                    }
-                }
+                factory = SalesViewModelFactory(repo)
             )
 
-            MaterialTheme {
+            KallisTheme {
                 MainScreen(
-                    articles = articles.value,
+                    articles = articles,
                     onReload = {
-                        articles.value = SettingsRepository.loadArticles(applicationContext)
+                        CoroutineScope(Dispatchers.IO).launch {
+                            val newArticles = SettingsRepository.loadArticles(applicationContext)
+                            withContext(Dispatchers.Main) {
+                                articles = newArticles
+                            }
+                        }
                     }
                 )
             }
         }
+
     }
 }
