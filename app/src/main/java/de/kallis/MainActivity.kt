@@ -22,6 +22,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.work.*
 import java.time.Duration
+import android.app.Application
+
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,10 +47,6 @@ class MainActivity : ComponentActivity() {
 
         val db = SalesDatabase.getDatabase(applicationContext)
         val repo = SalesRepository(db.salesDao())
-
-        CoroutineScope(Dispatchers.IO).launch {
-            repo.syncPendingSales()
-        }
 
         setContent {
             val articles = remember {
@@ -74,4 +73,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
